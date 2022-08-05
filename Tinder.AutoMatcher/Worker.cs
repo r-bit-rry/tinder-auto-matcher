@@ -42,23 +42,47 @@ namespace Tinder.AutoMatcher
 
         private async Task MatchTeasedRecommendations(CancellationToken cancellationToken)
         {
+            var likesRemaining = 1;
             while (!cancellationToken.IsCancellationRequested)
             {
+                await _client.Ping(cancellationToken);
+                _logger.LogDebug($"Updated location");
                 int likesNb = await GetLikesNumber(cancellationToken);
                 _logger.LogDebug($"{likesNb} people liked you");
 
-                ISet<string> teaserPhotoIds = await GetTeaserPhotoIds(cancellationToken);
-                await foreach (var teasedRec in GetTeasedRecommendations(teaserPhotoIds, cancellationToken))
+                var stillHasRecommendations = true;
+                while (stillHasRecommendations && likesRemaining > 0)
                 {
-                    var like = await _client.Like(teasedRec.UserInfo.Id, cancellationToken);
-                    if (like.Match != null)
-                        _logger.LogInformation("You matched " + teasedRec.UserInfo.Name);
-                    else
-                        _logger.LogError($"{teasedRec.UserInfo.Name} ({teasedRec.UserInfo.Id}) was not a match");
+                    stillHasRecommendations = false;
+                    ISet<string> teaserPhotoIds = await GetTeaserPhotoIds(cancellationToken);
+                    await foreach (var teasedRec in GetTeasedRecommendations(teaserPhotoIds, cancellationToken)) if (likesRemaining > 0)
+                    {
+                        stillHasRecommendations = true;
+                        var like = await _client.Like(teasedRec.UserInfo.Id, cancellationToken);
+                        likesRemaining = like.LikesRemaining;
+                        if (like.Match != null)
+                            _logger.LogInformation($"You matched {teasedRec.UserInfo.Name}. Remaining Likes: {likesRemaining}");
+                        else
+                            _logger.LogError($"{teasedRec.UserInfo.Name} ({teasedRec.UserInfo.Id}) was not a match");
+                    }
+                }
+                _logger.LogDebug("No more teased recommendations found.");
+
+                while (likesRemaining > 0)
+                {
+                    _logger.LogDebug($"Spending likes to increase profile visibility. Remaining Likes: {likesRemaining}");
+
+                    var recs = await GetRecommendations(cancellationToken);
+                    foreach (var rec in recs) if (likesRemaining > 0)
+                    {
+                        var like = await _client.Like(rec.UserInfo.Id, cancellationToken);
+                        likesRemaining = like.LikesRemaining;
+                        _logger.LogInformation($"You liked {rec.UserInfo.Name}. Remaining Likes {likesRemaining}");
+                    }
                 }
 
-                _logger.LogDebug("No more teased recommendations found. Pausing for 2 hours");
-                await Task.Delay(TimeSpan.FromHours(2), cancellationToken);
+                _logger.LogDebug("Bot loop ended. Pausing for 12 hours");
+                await Task.Delay(TimeSpan.FromHours(12), cancellationToken);
             }
         }
 

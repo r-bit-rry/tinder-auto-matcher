@@ -13,8 +13,9 @@ namespace Tinder
     public class TinderClient : ITinderClient
     {
         private readonly HttpClient _httpClient;
+        private Geolocation _location;
 
-        public TinderClient(Guid authToken)
+        public TinderClient(Guid authToken, Geolocation location)
         {
             _httpClient = new HttpClient
             {
@@ -24,6 +25,7 @@ namespace Tinder
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "Tinder/7.5.3 (iPhone; iOS 10.3.2; Scale/2.00)");
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
             _httpClient.DefaultRequestHeaders.Add("X-Auth-Token", authToken.ToString());
+            _location = location;
         }
 
         public async Task<IReadOnlyList<Recommendation>?> GetRecommendations(CancellationToken cancellationToken = default)
@@ -61,6 +63,12 @@ namespace Tinder
         {
             await Post<Geolocation, PingResponse>("user/ping", geolocation, cancellationToken);
         }
+
+        public async Task Ping(CancellationToken cancellationToken = default)
+        {
+            await Post<Geolocation, PingResponse>("user/ping", _location, cancellationToken);
+        }
+
 
         public async Task Message(string matchId, string message, CancellationToken cancellationToken = default)
         {
@@ -159,7 +167,7 @@ namespace Tinder
         {
             try
             {
-                return JsonSerializer.Deserialize<T>(json);
+                return JsonSerializer.Deserialize<T>(json)!;
             }
             catch (Exception e)
             {

@@ -90,6 +90,12 @@ namespace Tinder
         Task Ping(Geolocation geolocation, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Update your location.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token to cancel operation.</param>
+        Task Ping(CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Update your location (Tinder Plus Only).
         /// </summary>
         /// <param name="geolocation">New location.</param>
