@@ -4,13 +4,13 @@
 
 ## Overview
 The goal of Tinder Auto-Matcher is to dehumanize as much as it can social interactions. This is achieved by automatically
-liking back people who liked you Tinder to create a match without having to swipe one second. The next step would be to
+liking back people who liked your Tinder profile to create a match without having to swipe one second. The next step would be to
 send you an email everyday with recapitulation of today's matches.
 
 ## Usage
-- First you need your Tinder's authentication token. Log in to [tinder.com](https://tinder.com), open the developer console, type `localStorage.getItem("TinderWeb/APIToken")` and save the returned value.
+- First you need your Tinder's authentication token. Log in to [tinder.com](https://tinder.com), open the developer console, type `localStorage.getItem("TinderWeb/APIToken")` and save the returned value. (Will be replaced by selenium login).
 - Write the _X-Auth-Token_ value in the token key in Tinder.AutoMatcher/appsettings.json.
-- Install [.NET Core SDK 3.X](https://dotnet.microsoft.com/download).
+- Install [.NET Core SDK 6.X](https://dotnet.microsoft.com/download).
 - Finally, `dotnet run -p Tinder.AutoMatcher` to launch the worker.
 
 ## How does it work?
